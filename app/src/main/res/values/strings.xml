@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Guess the Phrase</string>
+    <string name="preference_score">com.example.kotlinGuessthePhrase.PREFERENCE_SCORE</string>
 </resources>

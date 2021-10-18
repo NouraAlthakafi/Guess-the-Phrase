@@ -1,18 +1,20 @@
 package com.example.guessthephrase
 
+import android.content.Context
 import android.content.DialogInterface
+import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
     //declare
+    lateinit var clForScore: LinearLayout
+    lateinit var tvScore: TextView
     lateinit var thePhrase: TextView
     lateinit var lettersG: TextView
     lateinit var rvPhrase: RecyclerView
@@ -20,17 +22,28 @@ class MainActivity : AppCompatActivity() {
     lateinit var etInput: EditText
     lateinit var buttonGuess: Button
 
-    val mystery = "a piece of cake"
+    val mystery = "A PIECE OF CAKE"
     var guessAnswer = CharArray(mystery.length)
     var lettersOut = ArrayList<Char>()
     var tryPhrase = 10
     var dealInput = ""
 
+    private lateinit var sharedPreferences: SharedPreferences
+
+    private var myScore = 0
+    private var theHighestScore = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        sharedPreferences = this.getSharedPreferences(
+            getString(R.string.preference_score), Context.MODE_PRIVATE)
+        theHighestScore = sharedPreferences.getInt("HighestScore", 0)
+
         //initialize
+        clForScore = findViewById(R.id.clForScore)
+        tvScore = findViewById(R.id.tvScore)
         thePhrase = findViewById(R.id.thePhrase)
         lettersG = findViewById(R.id.lettersG)
         etInput = findViewById(R.id.etInput)
@@ -42,6 +55,8 @@ class MainActivity : AppCompatActivity() {
         rvPhrase.layoutManager = LinearLayoutManager(this)
 
         //utilize
+        tvScore.text = "Highest Score: $theHighestScore"
+
         for (i in mystery.indices) {
             if (mystery[i] == ' ') {
                 guessAnswer[i] = ' '
@@ -51,7 +66,7 @@ class MainActivity : AppCompatActivity() {
         }
         thePhrase.text = "Phrase: ${String(guessAnswer)}"
         buttonGuess.setOnClickListener {
-            dealInput = etInput.text.toString()
+            dealInput = etInput.text.toString().toUpperCase()
             if (dealInput.isNotEmpty() && dealInput.length > 1){
                 allPhrase()
             }
@@ -64,11 +79,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
     fun allPhrase() {
-        dealInput = etInput.text.toString()
+        dealInput = etInput.text.toString().toUpperCase()
             if (tryPhrase > 0) {
                 if (dealInput == mystery) {
                     thePhrase.text = "Phrase: $mystery"
                     guesses.add("You guessed it right!")
+                    newScore()
                     customAlert()
                 } else {
                     guesses.add("Wrong! Try guessing a letter!")
@@ -83,7 +99,7 @@ class MainActivity : AppCompatActivity() {
             etInput.clearFocus()
     }
     fun allLetters(){
-        dealInput = etInput.text.toString()
+        dealInput = etInput.text.toString().toUpperCase()
         var aLetter = dealInput[0]
         var countLetter = 0
         if(tryPhrase > 0){
@@ -132,5 +148,16 @@ class MainActivity : AppCompatActivity() {
         val wish = builder1.create()
         wish.setTitle("New Game")
         wish.show()
+    }
+    private fun newScore(){
+        myScore = 0 + tryPhrase
+        if(myScore >= theHighestScore){
+            theHighestScore = myScore
+            with(sharedPreferences.edit()) {
+                putInt("HighestScore", theHighestScore)
+                apply()
+            }
+            Snackbar.make(clForScore, "BROKE SCORE RECORDS!", Snackbar.LENGTH_LONG).show()
+        }
     }
 }
